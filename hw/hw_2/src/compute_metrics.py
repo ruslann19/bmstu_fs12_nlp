@@ -7,9 +7,6 @@ from sklearn.metrics import (
 
 
 def compute_metrics(eval_pred):
-    print("compute_metrics function")
-    print("eval_pred", type(eval_pred), eval_pred)
-
     predictions, labels = eval_pred
     mse = mean_squared_error(labels, predictions)
     mae = mean_absolute_error(labels, predictions)

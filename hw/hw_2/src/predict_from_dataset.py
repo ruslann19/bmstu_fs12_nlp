@@ -1,4 +1,4 @@
-from src.bert_mlp_regressor import BertMLPRegressor
+from src.bert_regressor import BertRegressor
 import torch
 from torch.utils.data import DataLoader
 from tqdm.auto import tqdm
@@ -10,7 +10,7 @@ def predict_from_dataset(
     model_path: str,
     dataset: Dataset,
 ) -> np.ndarray:
-    model = BertMLPRegressor.from_pretrained(model_path)
+    model = BertRegressor.from_pretrained(model_path)
 
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     model.to(device)

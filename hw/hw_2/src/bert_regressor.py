@@ -9,8 +9,8 @@ from src.weighted_mse_loss import create_loss_fn
 
 
 # Создаем конфигурацию для нашей модели
-class BertMLPRegressorConfig(PretrainedConfig):
-    model_type = "BertMLPRegressor"
+class BertRegressorConfig(PretrainedConfig):
+    model_type = "BertRegressor"
 
     def __init__(
         self,
@@ -28,8 +28,8 @@ class BertMLPRegressorConfig(PretrainedConfig):
 
 
 # Наследуемся от PreTrainedModel для совместимости с HF
-class BertMLPRegressor(PreTrainedModel):
-    config_class = BertMLPRegressorConfig
+class BertRegressor(PreTrainedModel):
+    config_class = BertRegressorConfig
 
     def __init__(self, config):
         super().__init__(config)
@@ -37,17 +37,17 @@ class BertMLPRegressor(PreTrainedModel):
             config.hf_model_name,
             config=config.bert_config,
         )
-        self.regressor = nn.Sequential(
-            nn.Linear(config.bert_config.hidden_size, 128),
-            nn.ReLU(),
-            nn.Dropout(0.3),
-            nn.Linear(128, 1),
-        )
-        # self.loss_fn = nn.MSELoss()
-        # self.loss_fn = WeightedMSELoss(class_counts)
+        # self.regressor = nn.Sequential(
+        #     nn.Linear(config.bert_config.hidden_size, 128),
+        #     nn.ReLU(),
+        #     nn.Dropout(0.3),
+        #     nn.Linear(128, 1),
+        # )
+        self.regressor = nn.Linear(config.bert_config.hidden_size, 1)
+
         self.loss_fn = create_loss_fn(config.loss_type, config.classes_counts)
 
-    def forward(self, input_ids, attention_mask=None, labels=None, **kwargs):
+    def forward(self, input_ids, attention_mask, labels=None, **kwargs):
         outputs = self.bert(input_ids=input_ids, attention_mask=attention_mask)
         cls_tokens = outputs.last_hidden_state[:, 0, :]
         logits = self.regressor(cls_tokens).squeeze(-1)
@@ -57,17 +57,3 @@ class BertMLPRegressor(PreTrainedModel):
             loss = self.loss_fn(logits, labels)
 
         return {"loss": loss, "logits": logits}
-
-
-# # Загрузка конфигурации
-# classes_counts = train_df["labels"].astype(int).value_counts().to_dict()
-# # loss_fn = WeightedMSELoss(classes_counts)
-# # loss_fn = nn.MSELoss()
-
-# config = BertMLPRegressorConfig(
-#     hf_model_name=hf_model_name,
-#     loss_type="WeightedMSELoss",
-#     classes_counts=classes_counts,
-# )
-
-# model = BertMLPRegressor(config)
